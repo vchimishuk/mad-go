@@ -8,8 +8,7 @@ CGOFILES=\
 CGO_LDFLAGS=-lm -lmad
 
 CGO_OFILES=\
-#        comment_hlp.o\
-#	ogg_hlp.o\
+        gomad.o\
 
 include $(GOROOT)/src/Make.pkg
 
