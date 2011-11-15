@@ -15,10 +15,6 @@ import (
 type Decoder struct {
 	// C decoder structure.
 	cDecoder C.struct_gomad_decoder
-	// Sample rate of the file.
-	sampleRate int
-	// Number of channels in the current file.
-	channels int
 }
 
 // Whence type for Seek function.
@@ -32,34 +28,36 @@ const (
 )
 
 // New opens and initialize MAD decoder and File structure.
-func New(filename string) (file *Decoder, err os.Error) {
+func New(filename string) (decoder *Decoder, err os.Error) {
 	cFilename := C.CString(filename)
 	defer C.free(unsafe.Pointer(cFilename))
 
-	file = new(Decoder)
-	_, e := C.gomad_open(&(file.cDecoder), cFilename)
+	decoder = new(Decoder)
+	_, e := C.gomad_open(&(decoder.cDecoder), cFilename)
 	if e != nil {
 		return nil, fmt.Errorf("Failed to open file %s: %s", filename, e)
 	}
 
-	return file, nil
+	// TODO: Fill sampleRate.
+	// TODO: Fill channels.
+	// TODO: Fill length.
+
+	return decoder, nil
 }
 
 // SampleRate returns file's sample rate value.
-func (file *Decoder) SampleRate() int {
-	return file.sampleRate
+func (decoder *Decoder) SampleRate() int {
+	return int(decoder.cDecoder.sample_rate)
 }
 
 // Channels returns number of channels for the related audio file.
-func (file *Decoder) Channels() int {
-	return file.channels
+func (decoder *Decoder) Channels() int {
+	return int(decoder.cDecoder.channels)
 }
 
 // Length returns file's length in seconds.
-func (file *Decoder) Length() int {
-	// TODO:
-
-	return -1
+func (decoder *Decoder) Length() int {
+	return int(decoder.cDecoder.length)
 }
 
 // Seek move decoding position.
@@ -67,7 +65,7 @@ func (file *Decoder) Length() int {
 // integer value, which is new decoding position relative to the start of the file.
 // If whence equals SeekCurrent than position parameter can be negative as well as positive integer,
 // which means new position related to the current one.
-func (file *Decoder) Seek(position int, whence Whence) os.Error {
+func (decoder *Decoder) Seek(position int, whence Whence) os.Error {
 	// TODO:
 
 	return nil
@@ -75,13 +73,13 @@ func (file *Decoder) Seek(position int, whence Whence) os.Error {
 
 // Read returns up to the specified number of bytes of decoded PCM audio.
 // Return number of read 16-bit words.
-func (file *Decoder) Read(buf []byte) int {
+func (decoder *Decoder) Read(buf []byte) int {
 	// TODO:
 	
 	return -1
 }
 
 // Close release resources assigned to Decoder structure and close MAD decoder.
-func (file *Decoder) Close() {
-	C.gomad_close(&(file.cDecoder))
+func (decoder *Decoder) Close() {
+	C.gomad_close(&(decoder.cDecoder))
 }
