@@ -107,7 +107,7 @@ static int gomad_read_frame(struct gomad_decoder *decoder)
 /*
  * Calculate and returns length of the file in seconds.
  */
-static int gomad_calc_length(struct gomad_decoder *decoder)
+static void gomad_fill_info(struct gomad_decoder *decoder)
 {
 	/*
 	 * There are three ways of calculating the length of an mp3:
@@ -130,18 +130,17 @@ static int gomad_calc_length(struct gomad_decoder *decoder)
 	 *       as in herrie audio player.
 	 */
 
-	int len;
 	off_t offset;
 	off_t total;
 	int first_frame = 1;
 	
 	do {
 		if (gomad_read_frame(decoder) != 0) {
-			len = decoder->timer.seconds;
+			decoder->length = decoder->timer.seconds;
 			offset = ftello(decoder->file);
 			gomad_rewind(decoder);
 
-			return len;
+			return;
 		}
 
 		if (first_frame) {
@@ -158,11 +157,11 @@ static int gomad_calc_length(struct gomad_decoder *decoder)
 	fseek(decoder->file, 0, SEEK_END);
 	total = ftello(decoder->file);
 
-	len = ((double) total / offset) * decoder->timer.seconds;
+	decoder->length = ((double) total / offset) * decoder->timer.seconds;
 
 	gomad_rewind(decoder);
 	
-	return len;
+	return;
 }
 
 
@@ -174,16 +173,15 @@ int gomad_open(struct gomad_decoder *decoder, const char *filename)
 	}
 
 	gomad_rewind(decoder);
-
-	/* Retrive general file information (sample rate, channels, length, ...). */
-	decoder->length = gomad_calc_length(decoder);
+	gomad_fill_info(decoder);
 	
 	return 0;
 }
 
 
-size_t gomad_read(struct gomad_decoder *decoder, int16_t *buf, size_t len)
+size_t gomad_read(struct gomad_decoder *decoder, char *buf, size_t word_size, size_t len)
 {
+	size_t words_len = len * word_size;
 	size_t written = 0;
 	int i;
 
