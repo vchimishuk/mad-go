@@ -179,16 +179,18 @@ int gomad_open(struct gomad_decoder *decoder, const char *filename)
 }
 
 
-size_t gomad_read(struct gomad_decoder *decoder, char *buf, size_t word_size, size_t len)
+size_t gomad_read(struct gomad_decoder *decoder, char *buf, size_t len)
 {
-	size_t words_len = len * word_size;
+	int16_t *words_buf = (int16_t *)buf;
+	size_t words_len = len / 2;
+
 	size_t written = 0;
 	int i;
 
 	do {
 		if (decoder->current_sample == 0) {
 			if (gomad_read_frame(decoder) == -1) {
-				return written;
+				return written * 2;
 			}
 			if (mad_frame_decode(&decoder->frame, &decoder->stream) == -1) {
 				continue;
@@ -200,9 +202,9 @@ size_t gomad_read(struct gomad_decoder *decoder, char *buf, size_t word_size, si
 			mad_synth_frame(&decoder->synth, &decoder->frame);
 		}
 
-		while ((decoder->current_sample < decoder->synth.pcm.length) && (written < len)) {
+		while ((decoder->current_sample < decoder->synth.pcm.length) && (written < words_len)) {
 			for (i = 0; i < MAD_NCHANNELS(&decoder->frame.header); i++) {
-				buf[written++] = gomad_fixed_to_short(decoder->synth.pcm.samples[i][decoder->current_sample]);
+				words_buf[written++] = gomad_fixed_to_short(decoder->synth.pcm.samples[i][decoder->current_sample]);
 
 			}
 
@@ -212,9 +214,9 @@ size_t gomad_read(struct gomad_decoder *decoder, char *buf, size_t word_size, si
 		if (decoder->current_sample == decoder->synth.pcm.length) {
 			decoder->current_sample = 0;
 		}
-	} while (written < len);
+	} while (written < words_len);
 
-	return written;
+	return written * 2;
 }
 
 

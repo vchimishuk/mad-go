@@ -78,7 +78,7 @@ func (decoder *Decoder) Read(buf []byte) int {
 	bp := (*_Ctype_char)(unsafe.Pointer(&buf[0]))
 	l := (_Ctypedef_size_t)(len(buf))
 
-	read := C.gomad_read(&decoder.cDecoder, bp, 1, l)
+	read := C.gomad_read(&decoder.cDecoder, bp, l)
 	
 	return int(read)
 }

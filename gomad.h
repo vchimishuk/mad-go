@@ -40,7 +40,7 @@ int gomad_open(struct gomad_decoder *decoder, const char *filename);
 /*
  * Read and decode len bytes form input file.
  */
-size_t gomad_read(struct gomad_decoder *decoder, char *buf, size_t word_size, size_t len);
+size_t gomad_read(struct gomad_decoder *decoder, char *buf, size_t len);
 
 
 /*
